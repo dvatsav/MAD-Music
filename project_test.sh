@@ -14,8 +14,11 @@ download_video()
 
 }
 
+ 
+
 convert_video()
 {
+	clear
 	echo "Enter the file name (with file extension)"
 	read name
 	echo "Enter required file format (mp3/mp4/wav/avi/wma)"
@@ -23,7 +26,8 @@ convert_video()
 	namelen=`expr lenth $name`
 	b=${name::namelen-4}
 	avconv -i "$name" -c:a libmp3lame "$b"."$form"
-
+	clear
+	echo "File converted"
 }
 		
 play_video()
@@ -32,28 +36,38 @@ play_video()
 	read ans
 	if [ $ans = 'i' ]
 		then
-		echo "Enter the name of the file that you wish to play "
-		ls | grep ".mkv" 
-		ls | grep ".mp3" 
-		ls | grep ".mp4" 
-		ls | grep ".wav"
-		ls | grep ".webm" 
-		ls | grep ".avi"	
-		read nameoffile 
-		ffplay "$nameoffile"
-	else
-		echo "Enter the name of the playlist"
-		read name
-		n=`awk '{}END{print NR}' "$name".txt `
-		echo $n
+			echo "Enter the name of the file that you wish to play "
+			echo
+			display_files	
+			read nameoffile 
+			ffplay "$nameoffile"
+		else
+			echo "Enter the name of the playlist"
+			read name
+			n=`awk '{}END{print NR}' "$name".txt `
+			echo $n
 		
-		for i in `seq 1 $n` 
-		do
-			#could make this random. Give the option of shuffling
-			
-			ffplay -autoexit `sed "$i!d" "$name".txt`
+			echo "Shuffle or normal? (s/n)"
+			read ans_shuff
+			if  [ $ans_shuff = 'n' ]
+				then
+		
+					for i in `seq 1 $n` 
+					do
+						ffplay -autoexit `sed "$i!d" "$name".txt`
+					done
+				else 
+					clear
 
-		done 
+			
+					for j in `seq 1 $n`
+						do
+							i=$((( RANDOM % $n) + 1 ))
+							ffplay -autoexit `sed "$i!d" "$name".txt`
+							clear
+						done
+			fi	
+		 
 	fi
 }
 
@@ -73,6 +87,9 @@ combine_mp3()
 				counter2=0
 				while [ $counter2 -lt 2 ]
 				do
+					clear
+					display_files
+					echo
 					echo "Enter the song"
 					if [ $first_song -eq 1 ]
 						then
@@ -91,20 +108,27 @@ combine_mp3()
 			if [ $counter -eq 0 ]
 				then
 					mp3wrap tmp.mp3 "$song_1" "$song_name"
+					clear
 				else
 					mp3wrap -a tmp_MP3WRAP.mp3 "$song_name1" "$song_name"
+					clear
 
 			fi
 			counter=`expr $counter + 2`
 			done
 	else
+		clear
+		display_files
+		echo
 		echo "Enter the song"
 		read song_1
+		echo
 		echo "Enter the song"
 		read song_name1
 		echo "Enter the song"
 		read song_name
 		mp3wrap tmp.mp3 "$song_1" "$song_name1" "$song_name"
+		clear
 		counter3=3
 		if [ $num_of_songs > 3 ]			
 			then
@@ -127,6 +151,7 @@ combine_mp3()
 					done 
 			
 				mp3wrap -a tmp_MP3WRAP.mp3 "$song_name1" "$song_name"
+				clear
 				counter3=`expr $counter3 + 2`
 				done
         fi
@@ -153,12 +178,8 @@ playlist_ops()
 			while [ $flag1 -eq 0 ]
 			do
 				echo "Displaying all songs in the present folder, please enter the name of the song you wish to add to the playlist (with extension)"
-				ls | grep ".mkv" 
-				ls | grep ".mp3" 
-				ls | grep ".mp4" 
-				ls | grep ".wav"
-				ls | grep ".webm" 
-				ls | grep ".avi"
+				echo
+				display_files
 
 				read add_play
 				ls | grep -x "$add_play" >> "$play_name".txt
@@ -188,15 +209,18 @@ playlist_ops()
 						cat -n "$play_mod".txt
 						read song_del
 						sed -i "/$song_del/d" "$play_mod.txt"
+						echo "Do you wish to perform another operation? (y/n)"
+                        read ans_repeat
+                        if [ $ans_repeat = 'y' ]
+							then continue
+						else
+							flag2=`expr $flag2 + 1`
+						fi
 				else
 						clear
 						echo "Enter the name of the song you wish to add (with extension)"
-						ls | grep ".mkv" 
-						ls | grep ".mp3" 
-						ls | grep ".mp4" 
-						ls | grep ".wav"
-						ls | grep ".webm" 
-						ls | grep ".avi"
+						echo
+						display_files
                         
                         read song_add
                         ls | grep "$song_add" >> "$play_mod".txt
@@ -214,9 +238,24 @@ playlist_ops()
 	fi		
 }
 
+display_files()
+{
+	ls | grep ".mkv" 
+	ls | grep ".mp3" 
+	ls | grep ".mp4" 
+	ls | grep ".wav"
+	ls | grep ".webm" 
+	ls | grep ".avi"
+}
 
+
+clear
+echo "ABCDE Music player"
 echo "What do you wish to do?"
-echo "(a) Download a youtube video"
+a=1
+while [ $a -eq 1 ]
+do
+echo "(a) Download a video"
 echo "(b) Convert file formats"
 echo "(c) Play music and videos"
 echo "(d) Combine"
@@ -224,10 +263,17 @@ echo "(e) Create and modify Playlists"
 read n
 
 case $n in 
-	a) download_video ;;
+	a) download_video ;; 
 	b) convert_video ;;
 	c) play_video ;;
 	d) combine_mp3 ;;
 	e) playlist_ops ;;
 esac
-
+clear
+echo "Do you wish to do anything else?(y/n)"
+read ans
+if [ $ans = 'n' ]
+	then 
+	a=`expr $a + 1`
+fi
+done
