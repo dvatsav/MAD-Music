@@ -9,3 +9,4 @@ sudo apt-get update
 sudo apt-get dist-upgrade
 sudo apt-get install ffmpeg
 sudo apt-get install libid3-3.8.3-dev
+sudo apt-get install mp3wrap
